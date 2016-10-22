@@ -114,9 +114,7 @@ class RobotControl():
 
     def goCenter(self):
         for i in self.int_id_All:
-            self.REGmotor(i,self.MaxValue/2,1023)
-        time.sleep(0.00075)
-        self.action()
+            self.movemotor(i,self.MaxValue/2,1023)
         time.sleep(0.1)
 ################################################################################################
 
@@ -146,22 +144,65 @@ class RobotControl():
         return rad
 
     def changeRad2Value(self,rad):
+        if rad > np.pi:
+            rad = rad - 2*np.pi
+
+        elif rad < -np.pi:
+            rad = rad + 2*np.pi
         value = (self.MaxValue*rad)/(1.33333*np.pi)
-        print value
         return value
 ################################################################################################
 
 #################################### Inverse kinametic #########################################
-    def Inverse3axis(self,X, Y, Z, h, l1, l2):
+    def moveRobotLegFromAngleInRAD(self,angle,side = 'L'):
+        container = []
+        for i in range (0,len(angle)):
+            if side == 'L':
+                value = (self.MaxValue/2) - self.changeRad2Value(angle[i])
+            elif side == 'R':
+                if 4>i>0:
+                    value = self.changeRad2Value(angle[i]) +(self.MaxValue/2)
+                else:
+                    value = (self.MaxValue/2) - self.changeRad2Value(angle[i])
+            print 'value', value
+            container.append(int(value))
+
+        return container
+#################################################################################################
+
+    def controlSpeedMotor(self,useTime,list_motor_id,list_pos):
+        current_pos = []
+        Robot.get(1)
+        for i in range(0, len(list_motor_id)):
+            a = Robot.get(list_motor_id[i])
+            print "Motor" + str(list_motor_id[i]) + " value = " + str(a)
+            current_pos.append(a)
+
+        begin = time.time()
+        now = time.time()
+        while now < begin + useTime:
+            for i in range(0,len(list_motor_id)):
+                p = current_pos[i] + int(((list_pos[i] - current_pos[i]) * (now - begin)) / (useTime))
+                self.movemotor(list_motor_id[i], p, 1023)
+            now = time.time()
+            time.sleep(0.00075)
+
+        for i in range(0,len(list_motor_id)):
+            self.movemotor(list_motor_id[i], list_pos[i], 1023)
+            # time.sleep(0.0001)
+        time.sleep(0.001)
+
+class kinematicsCalculator():
+
+    def __init__(self):
+        pass
+
+    def Inverse3axis(self, X, Y, Z, h, l1, l2):
         x = X
         y = Y
         z = Z - h
 
         r = math.hypot(y, z)
-        pho = math.hypot(r, x)
-        phi = math.atan2(y, z)
-        # xPrime = r
-        # zPrime = -z
         xPrime = x
         zPrime = r
 
@@ -171,11 +212,10 @@ class RobotControl():
         theta2 = math.atan2(sinTheta2, cosTheta2)
         theta1 = math.atan2(zPrime, xPrime) - math.atan2(l2 * sinTheta2, l1 + l2 * cosTheta2)
         theta3 = math.atan2(y, z)
-        # theta3 = phi
 
         return theta1, theta2, theta3
 
-    def calAngleForLeg(self,X, Y, Z, h=270, l1=135, l2=135):
+    def calAngleForLeg(self, X, Y, Z, h=270, l1=135, l2=135):
         theta = self.Inverse3axis(X, Y, Z, h, l1, l2)
         print math.degrees(theta[0]), math.degrees(theta[1]), math.degrees(theta[2])
 
@@ -188,35 +228,7 @@ class RobotControl():
 
         return theta3Robot, theta1Robot, theta2Robot, theta4Robot, theta5Robot
 
-    def moveRobotLegToXYZ(self,X,Y,Z,h=305,l1=135,l2=135,side = 'L',ex_cept_id = []):
-        container = []
-        if side == 'L':
-            iterable = self.int_id_L
-        elif side == 'R':
-            iterable = self.int_id_R
 
-        angle = self.calAngleForLeg(X,Y,Z,h=h,l1=l1,l2=l2)
-        for i in angle:
-            value = 2048 - Robot.changeRad2Value(i)
-            print 'value', value
-            container.append(int(value))
-
-        return container
-#################################################################################################
-
-    def controlSpeedMotor(self,useTime,list_motor_id,list_pos,current_pos):
-        begin = time.time()
-        now = time.time()
-        while now < begin + useTime:
-            for i in range(0,len(list_motor_id)):
-                p = current_pos[i] + int(((list_pos[i] - list_pos[i]) * (now - begin)) / (useTime))
-                self.movemotor(list_motor_id[i], p, 1023)
-            time.sleep(0.001)
-            now = time.time()
-
-        for i in range(0,len(list_motor_id)):
-            Robot.REGmotor(list_motor_id[i], list_pos[i], 1023)
-        Robot.action()
 
 
 if __name__ == '__main__':
@@ -227,19 +239,60 @@ if __name__ == '__main__':
     Robot = RobotControl('COM5')
     Robot.get(5)
     Robot.goCenter()
+    time.sleep(1)
     # Robot.movemotorWithout(5,100,1023)
     # angle = Robot.get(5)
     # time.sleep(1)
     # Robot.distorqAll()
-    posNow = []
-    dic = {0: 3, 1: 4, 2: 2, 3: 5, 4: 6}
-    for i in range(0, 5):
-        a = Robot.get(dic[i])
-        print "Motor"+str(dic[i])+" value = "+str(a)
-        posNow.append(a)
+    # posNow = []
+    # dic = {0: 3, 1: 4, 2: 2, 3: 5, 4: 6}
+    # for i in range(0, 5):
+    #     a = Robot.get(dic[i])
+    #     print "Motor"+str(dic[i])+" value = "+str(a)
+    #     posNow.append(a)
+    #
+    # print posNow
 
-    print posNow
-    x = [255, 255, 1, 6, 3, 1, 17]
-    a = (~((sum(x) - 510) % 256)) % 256
-    print 'check',a
-    # print angle
+    list_id_R = Robot.int_id_R[1:]
+    list_id_L = Robot.int_id_L[1:]
+    print list_id_L
+
+    kinCal = kinematicsCalculator()
+    angle = kinCal.calAngleForLeg(85.0,-85.0,100.0,h=305)
+    goal_pos = Robot.moveRobotLegFromAngleInRAD(angle,side='R')
+    print "################################\n\n\n\n",goal_pos,'      ',angle,'\n\n\n\n\n\n#########################################'
+    Robot.controlSpeedMotor(4,list_id_R,goal_pos)
+
+    print "\n\n\n\n##########################################################stop #############################################################################################\n\n\n\n"
+    time.sleep(1)
+
+    goal_pos = [2048,2045,2048,2048,2048]
+    Robot.controlSpeedMotor(4,list_id_R,goal_pos)
+
+    angle = kinCal.calAngleForLeg(25.0,-45.0,110.0, h=305)
+    goal_pos = Robot.moveRobotLegFromAngleInRAD(angle, side='R')
+    print "################################\n\n\n\n", goal_pos, '      ', angle, '\n\n\n\n\n\n#########################################'
+    Robot.controlSpeedMotor(4, list_id_R, goal_pos)
+
+    goal_pos = [2048, 2045, 2048, 2048, 2048]
+    Robot.controlSpeedMotor(4, list_id_R, goal_pos)
+
+    kinCal = kinematicsCalculator()
+    angle = kinCal.calAngleForLeg(85.0, 85.0, 100.0, h=305)
+    goal_pos = Robot.moveRobotLegFromAngleInRAD(angle, side='L')
+    print "################################\n\n\n\n", goal_pos, '      ', angle, '\n\n\n\n\n\n#########################################'
+    Robot.controlSpeedMotor(4, list_id_L, goal_pos)
+
+    print "\n\n\n\n##########################################################stop #############################################################################################\n\n\n\n"
+    time.sleep(1)
+
+    goal_pos = [2048, 2048, 2048, 2048, 2048]
+    Robot.controlSpeedMotor(4, list_id_L, goal_pos)
+
+    angle = kinCal.calAngleForLeg(25.0, 45.0, 110.0, h=305)
+    goal_pos = Robot.moveRobotLegFromAngleInRAD(angle, side='L')
+    print "################################\n\n\n\n", goal_pos, '      ', angle, '\n\n\n\n\n\n#########################################'
+    Robot.controlSpeedMotor(4, list_id_L, goal_pos)
+
+    goal_pos = [2048, 2048, 2048, 2048, 2048]
+    Robot.controlSpeedMotor(4, list_id_L, goal_pos)
