@@ -1,6 +1,6 @@
 import serial
 import time
-
+#test git
 class SentData(object):
 
     def __init__(self,com,baurd = 9600):
