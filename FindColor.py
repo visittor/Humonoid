@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from computeVision import *
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 cv2.namedWindow('set')
 def nothing():
     pass
