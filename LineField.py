@@ -2,11 +2,12 @@ import cv2
 import numpy as np
 from computeVision import *
 import time
-import imutils
+#import imutils
 import glob
 
 imagePath = sorted(glob.glob('tesPic/*.jpg'))
 print imagePath
+cap = cv2.VideoCapture(0)
 # cap = cv2.VideoCapture(1)
 erode = (7,7)
 dilation = (7,7)
@@ -19,7 +20,8 @@ TrackBall = Track(erode_=erode,dilation_=dilation,blur_=blur,shape_=(1,10),color
 index4path = 0
 while True:
     start = time.time()
-    frame = cv2.imread(imagePath[index4path%len(imagePath)])
+    # frame = cv2.imread(imagePath[index4path%len(imagePath)])
+    ret,frame = cap.read()
     frameCenter = (frame.shape[1]/2,frame.shape[0]/2)
     frame = cv2.flip(frame, 0)
 
@@ -44,16 +46,10 @@ while True:
         y = i[0][1]
         cv2.circle(frame, (x, y), 3, 255, -1)
 
-    # if lines is not None:
-    #     print len(lines)
-    #     for line in lines:
-    #         x1, y1, x2, y2 = line[0]
-    #         cv2.line(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-
     stack = np.hstack((maskWhite,skeletonWhite))
     cv2.imshow('skel',stack)
     cv2.imshow('frame',frame)
-    k = cv2.waitKey(0)
+    k = cv2.waitKey(1)
     index4path += 1
     print index4path
     if k ==27:
