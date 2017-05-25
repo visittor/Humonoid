@@ -109,22 +109,18 @@ class Vector():
             return
 
         for i in range(1, coff.size[1] + 1):
-            print 'coff= ', coff.data
-            print 'cont= ', cont.data
             if coff.data[coff.RowCol2Index((i, i))] == 0:
                 for k in range(1,coff.size[1] + 1):
                     if coff.data[coff.RowCol2Index((k,i))] != 0:
                         multi = 1/ (coff.data[coff.RowCol2Index((k, i))])
                         coff.addRow2Row(i, k, mulRow2=multi)
                         cont.addRow2Row(i, k, mulRow2=multi)
-                        print 'Add row {} with row {} * {}'.format(i, k, multi)
                         break
 
             else:
                 multi = 1 / coff.data[coff.RowCol2Index((i, i))]
                 coff.multiplyRow(float(multi), i)
                 cont.multiplyRow(float(multi), i)
-                print 'multi Row {} by {}'.format(i, multi)
 
             for j in range(1, coff.size[1] + 1):
                 print 'coff= ', coff.data
@@ -152,31 +148,21 @@ class Vector():
                         # print multi
                         coff.addRow2Row(j,i,mulRow2=multi)
                         cont.addRow2Row(j,i,mulRow2=multi)
-                        print 'Add row {} with row {} * {}'.format(j,i,multi)
 
         for i in range(1,coff.size[1]+1):
-            print 'coff= ', coff.data
-            print 'cont= ', cont.data
             multi = 1/coff.data[coff.RowCol2Index((i,i))]
             coff.multiplyRow(float(multi),i)
             cont.multiplyRow(float(multi),i)
-            print 'multi Row {} by {}'.format(i, multi)
-
-        print 'coff= ', coff.data
-        print 'cont= ', cont.data
         return cont
 
     def intersect(self,line1,line2):
         coff = [line1.vector.x, -line2.vector.x, line1.vector.y, -line2.vector.y]
         cont = [line2.startPoint.x - line1.startPoint.x, line2.startPoint.y - line1.startPoint.y]
-        print 'coff',coff,line2.startPoint.x,line1.startPoint.x
         coff = self.matrix((2, 2), coff)
         cont = self.matrix((2, 1), cont)
         self.equaSolv(coff, cont)
         t4line1 = cont.data[0]
-        print 'start',line1.startPoint,line1.vector*t4line1
         pointIntersect = line1.startPoint + line1.vector* t4line1
-        print pointIntersect
         return pointIntersect
 
     def dotproduct(self,vec1,vec2):
