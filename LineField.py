@@ -7,7 +7,7 @@ import glob
 
 imagePath = sorted(glob.glob('tesPic/*.jpg'))
 print imagePath
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture("/dev/ttyACM99")
 # cap = cv2.VideoCapture(1)
 erode = (7,7)
 dilation = (7,7)
