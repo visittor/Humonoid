@@ -8,7 +8,7 @@ import glob
 imagePath = sorted(glob.glob('tesPic/*.jpg'))
 print imagePath
 # cap = cv2.VideoCapture("/dev/ttyACM99")
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 erode = (7,7)
 dilation = (7,7)
 blur = (15,15)
@@ -24,7 +24,7 @@ while True:
     ret,frame = cap.read()
     frameCenter = (frame.shape[1]/2,frame.shape[0]/2)
     frame = cv2.flip(frame, 0)
-
+    #cv2.imshow("frame",frame)
     maskGreen = TrackBall.getOnlyMask(frame, lowerGreen, upperGreen,removenoise=True)
     _, c, _ = cv2.findContours(maskGreen.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     ret, cntWhite, maskWhite, allContoursWhite = TrackBall.getMaskAndCnt(frame, lowerWhite, upperWhite, percen=0.035, dst=None)
@@ -47,11 +47,11 @@ while True:
         cv2.circle(frame, (x, y), 3, 255, -1)
 
     stack = np.hstack((maskWhite,skeletonWhite))
-    cv2.imshow('skel',stack)
+    #cv2.imshow('skel',stack)
     cv2.imshow('frame',frame)
-    k = cv2.waitKey(1)
+    k = cv2.waitKey(10)
     index4path += 1
-    print index4path
+    print k
     if k ==27:
         break
 
